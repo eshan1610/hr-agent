@@ -11,7 +11,10 @@ from __future__ import annotations
 import os
 import time
 
+from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
+
+load_dotenv()
 
 from hr_data import BENEFITS, HOLIDAYS, HR_CONTACTS, LEAVE_POLICY
 
