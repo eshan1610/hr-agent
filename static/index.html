@@ -1,699 +1,1120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HRBot — XYZ Company</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Argus.ai — XYZ Company</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --sidebar-bg: #0f172a;
-      --sidebar-accent: #1e293b;
-      --brand: #3b82f6;
-      --brand-dark: #2563eb;
-      --chat-bg: #f1f5f9;
-      --bubble-bot: #ffffff;
-      --bubble-user: #3b82f6;
-      --text-primary: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --radius: 18px;
-    }
+:root {
+  --white: #ffffff;
+  --paper: #fdfbfb;
+  --black: #17120f;
+  --ink: #3d3733;
+  --muted: #8a817c;
+  --faint: #c0b6b2;
+  --red: #e05252;
+  --red-deep: #c23d3d;
+  --red-tint: #fcf0ef;
+  --red-line: #f3dcda;
+  --line: #ece5e3;
+  --disp: "Archivo", sans-serif;
+  --body: "Public Sans", -apple-system, sans-serif;
+  --ease: cubic-bezier(0.25, 0.8, 0.3, 1);
+}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-      background: var(--chat-bg);
-    }
+html { height: 100%; }
 
-    /* ── Sidebar ── */
-    .sidebar {
-      width: 280px;
-      min-width: 280px;
-      background: var(--sidebar-bg);
-      color: #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      padding: 28px 20px;
-      gap: 28px;
-      overflow-y: auto;
-    }
+body {
+  font-family: var(--body);
+  background:
+    radial-gradient(900px 380px at 50% -160px, rgba(224, 82, 82, 0.07), transparent 70%),
+    var(--paper);
+  color: var(--black);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+::selection { background: #f7d8d6; }
 
-    .brand-icon {
-      width: 44px;
-      height: 44px;
-      background: var(--brand);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
-    }
+button { font-family: inherit; }
 
-    .brand-text h1 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #f8fafc;
-      line-height: 1.2;
-    }
+/* ═════════ header ═════════ */
+.top {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 32px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+  animation: fade 0.6s var(--ease) both;
+}
 
-    .brand-text p {
-      font-size: 12px;
-      color: #94a3b8;
-      margin-top: 2px;
-    }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
-    .divider {
-      height: 1px;
-      background: #1e293b;
-    }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
 
-    .section-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #475569;
-      margin-bottom: 10px;
-    }
+.brand-mark {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: var(--red);
+  color: var(--white);
+  font-family: var(--disp);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 3px 10px rgba(224, 82, 82, 0.35);
+}
 
-    .capabilities {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+.brand-name {
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 16.5px;
+  letter-spacing: -0.01em;
+}
 
-    .cap-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: var(--sidebar-accent);
-      font-size: 13px;
-      color: #cbd5e1;
-      cursor: pointer;
-      transition: background 0.15s;
-      border: none;
-      text-align: left;
-      width: 100%;
-    }
+.brand-co {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  padding-left: 11px;
+  margin-left: 2px;
+}
 
-    .cap-item:hover { background: #263148; color: #f1f5f9; }
-    .cap-icon { font-size: 16px; flex-shrink: 0; }
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 
-    .quick-chips {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+/* country segmented control */
+.country-label {
+  font-family: var(--disp);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
 
-    .chip {
-      background: transparent;
-      border: 1px solid #1e293b;
-      color: #94a3b8;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 12px;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.15s;
-      line-height: 1.4;
-    }
+.seg {
+  display: inline-flex;
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  border-radius: 99px;
+  padding: 3px;
+  gap: 2px;
+}
 
-    .chip:hover {
-      border-color: var(--brand);
-      color: #e2e8f0;
-      background: rgba(59, 130, 246, 0.1);
-    }
+.seg button {
+  border: none;
+  background: transparent;
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, box-shadow 0.25s;
+}
 
-    .sidebar-footer {
-      margin-top: auto;
-      font-size: 11px;
-      color: #334155;
-      line-height: 1.6;
-    }
+.seg button.on {
+  background: var(--red);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(224, 82, 82, 0.4);
+}
 
-    /* ── Main chat area ── */
-    .chat-wrapper {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+.status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
 
-    .chat-header {
-      background: #ffffff;
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+.status .led {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #3da764;
+  transition: background 0.3s;
+}
+.status.busy .led { background: var(--red); animation: blink 0.9s ease infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
 
-    .chat-header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+.clear {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 15px;
+  cursor: pointer;
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
+}
+.clear:hover { color: var(--red-deep); border-color: var(--red-line); background: var(--red-tint); }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #22c55e;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
+/* ═════════ stage ═════════ */
+.stage {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 100px 32px 190px;
+  scroll-behavior: smooth;
+}
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+.stage::-webkit-scrollbar { width: 9px; }
+.stage::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; border: 2px solid var(--paper); }
+.stage::-webkit-scrollbar-thumb:hover { background: var(--faint); }
 
-    .chat-header h2 {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
+.wrap { max-width: 1100px; margin: 0 auto; }
 
-    .chat-header p {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
+/* ═════════ welcome ═════════ */
+.welcome > * { animation: rise 0.65s var(--ease) both; }
+.welcome > *:nth-child(1) { animation-delay: 0.05s; }
+.welcome > *:nth-child(2) { animation-delay: 0.18s; }
 
-    .clear-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-    .clear-btn:hover {
-      border-color: #ef4444;
-      color: #ef4444;
-    }
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 28px;
+  align-items: stretch;
+  padding-top: 3.5vh;
+  margin-bottom: 28px;
+}
 
-    /* ── Messages ── */
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      scroll-behavior: smooth;
-    }
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--disp);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  border-radius: 99px;
+  padding: 6px 14px;
+  margin-bottom: 22px;
+}
 
-    .message {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      max-width: 75%;
-      animation: fadeUp 0.2s ease;
-    }
+.eyebrow::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+}
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+.hello {
+  font-family: var(--disp);
+  font-size: clamp(34px, 4.2vw, 52px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
 
-    .message.bot { align-self: flex-start; }
-    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+.hello em {
+  font-style: normal;
+  color: var(--red);
+}
 
-    .avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-      background: #e0f2fe;
-    }
+.intro {
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 28px;
+}
 
-    .message.user .avatar {
-      background: var(--brand-dark);
-      font-size: 13px;
-      color: white;
-      font-weight: 600;
-    }
+.stats {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  max-width: 520px;
+}
 
-    .bubble {
-      padding: 12px 16px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-word;
-      max-width: 100%;
-    }
+.stat { flex: 1; }
+.stat + .stat { border-left: 1px solid var(--line); padding-left: 20px; }
 
-    .message.bot .bubble {
-      background: var(--bubble-bot);
-      color: var(--text-primary);
-      border-bottom-left-radius: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
+.stat b {
+  display: block;
+  font-family: var(--disp);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
 
-    .message.user .bubble {
-      background: var(--bubble-user);
-      color: white;
-      border-bottom-right-radius: 4px;
-    }
+.stat span {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
 
-    .meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 4px;
-      padding: 0 4px;
-    }
+/* country panel */
+.country-panel {
+  background: var(--black);
+  color: var(--white);
+  border-radius: 20px;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+}
 
-    .message.user .meta { text-align: right; }
+.country-panel h2 {
+  font-family: var(--disp);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+}
 
-    /* ── Typing indicator ── */
-    .typing-indicator {
-      display: none;
-      align-self: flex-start;
-      align-items: flex-end;
-      gap: 10px;
-      animation: fadeUp 0.2s ease;
-    }
+.country-panel .cp-sub {
+  font-size: 12px;
+  color: #a89f9a;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
 
-    .typing-indicator.visible { display: flex; }
+.cp-options { display: flex; flex-direction: column; gap: 10px; }
 
-    .typing-bubble {
-      background: var(--bubble-bot);
-      border-radius: var(--radius);
-      border-bottom-left-radius: 4px;
-      padding: 14px 18px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      display: flex;
-      gap: 5px;
-      align-items: center;
-    }
+.cp-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 13px;
+  padding: 13px 15px;
+  color: var(--white);
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, transform 0.25s var(--ease);
+}
 
-    .dot {
-      width: 7px;
-      height: 7px;
-      background: #94a3b8;
-      border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
+.cp-opt:hover { transform: translateX(3px); border-color: rgba(255, 255, 255, 0.3); }
 
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+.cp-opt.on {
+  background: rgba(224, 82, 82, 0.18);
+  border-color: var(--red);
+}
 
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-      40% { transform: scale(1.2); opacity: 1; }
-    }
+.cp-flag { font-size: 21px; }
 
-    /* ── Input ── */
-    .input-area {
-      background: #ffffff;
-      border-top: 1px solid var(--border);
-      padding: 16px 24px;
-    }
+.cp-opt b {
+  display: block;
+  font-family: var(--disp);
+  font-size: 13.5px;
+  font-weight: 600;
+}
 
-    .input-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--chat-bg);
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      padding: 10px 14px;
-      transition: border-color 0.15s;
-    }
+.cp-opt span {
+  font-size: 11px;
+  color: #a89f9a;
+}
 
-    .input-row:focus-within {
-      border-color: var(--brand);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
+.cp-check {
+  margin-left: auto;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: transparent;
+  transition: all 0.25s;
+}
+.cp-opt.on .cp-check {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--white);
+}
 
-    #user-input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      font-size: 14px;
-      color: var(--text-primary);
-      outline: none;
-      resize: none;
-      max-height: 120px;
-      line-height: 1.5;
-      font-family: inherit;
-    }
+.cp-note {
+  margin-top: auto;
+  padding-top: 18px;
+  font-size: 11.5px;
+  color: #a89f9a;
+  line-height: 1.6;
+}
+.cp-note b { color: var(--white); font-weight: 600; }
 
-    #user-input::placeholder { color: #94a3b8; }
+/* suggestions */
+.sg-head {
+  font-family: var(--disp);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 13px;
+}
 
-    .send-btn {
-      width: 36px;
-      height: 36px;
-      background: var(--brand);
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s, transform 0.1s;
-      flex-shrink: 0;
-    }
+.suggest {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
 
-    .send-btn:hover { background: var(--brand-dark); }
-    .send-btn:active { transform: scale(0.94); }
-    .send-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+.sg {
+  text-align: left;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 17px 18px;
+  cursor: pointer;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s var(--ease), background 0.25s;
+}
 
-    .send-btn svg { fill: white; width: 18px; height: 18px; }
+.sg:hover {
+  border-color: var(--red-line);
+  background: #fffafa;
+  box-shadow: 0 8px 24px rgba(224, 82, 82, 0.1);
+  transform: translateY(-3px);
+}
 
-    .input-hint {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 8px;
-      text-align: center;
-    }
+.sg h3 {
+  font-family: var(--disp);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
 
-    /* ── Welcome state ── */
-    .welcome {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      gap: 16px;
-      text-align: center;
-      padding: 40px;
-    }
+.sg .arr { color: var(--faint); transition: transform 0.25s var(--ease), color 0.25s; }
+.sg:hover .arr { transform: translateX(3px); color: var(--red); }
 
-    .welcome-icon {
-      width: 64px;
-      height: 64px;
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-    }
+.sg p { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
 
-    .welcome h2 {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
+/* ═════════ thread ═════════ */
+.thread {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
 
-    .welcome p {
-      font-size: 14px;
-      color: var(--text-muted);
-      max-width: 380px;
-      line-height: 1.6;
-    }
+.turn { animation: rise 0.45s var(--ease) both; }
 
-    .welcome-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      max-width: 500px;
-      margin-top: 8px;
-    }
+.turn.you { align-self: flex-end; max-width: 75%; }
 
-    .welcome-chip {
-      background: white;
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      padding: 8px 16px;
-      font-size: 13px;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
+.you-pill {
+  background: var(--black);
+  color: var(--white);
+  font-size: 14.5px;
+  line-height: 1.6;
+  padding: 13px 18px;
+  border-radius: 16px 16px 5px 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 4px 14px rgba(23, 18, 15, 0.18);
+}
 
-    .welcome-chip:hover {
-      border-color: var(--brand);
-      color: var(--brand);
-      background: #eff6ff;
-    }
+.turn.bot { max-width: 100%; }
 
-    /* ── Scrollbar ── */
-    .messages::-webkit-scrollbar { width: 5px; }
-    .messages::-webkit-scrollbar-track { background: transparent; }
-    .messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.bot-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+}
 
-    /* ── Responsive ── */
-    @media (max-width: 640px) {
-      .sidebar { display: none; }
-      .message { max-width: 90%; }
-    }
-  </style>
+.bot-chip {
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  background: var(--red);
+  color: var(--white);
+  font-family: var(--disp);
+  font-weight: 800;
+  font-size: 9.5px;
+  display: grid;
+  place-items: center;
+}
+
+.bot-head .name {
+  font-family: var(--disp);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bot-head .time {
+  font-size: 11.5px;
+  color: var(--faint);
+  font-weight: 500;
+}
+
+.copy-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 9px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.25s, color 0.25s, background 0.25s;
+}
+.turn.bot:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { color: var(--red-deep); background: var(--red-tint); }
+.copy-btn svg { width: 12px; height: 12px; }
+
+/* system chip (country switch) */
+.sys {
+  align-self: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--red-deep);
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  border-radius: 99px;
+  padding: 6px 16px;
+  animation: rise 0.4s var(--ease) both;
+}
+
+/* markdown */
+.md {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--ink);
+  word-break: break-word;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 5px 16px 16px 16px;
+  padding: 18px 22px;
+  box-shadow: 0 2px 10px rgba(23, 18, 15, 0.04);
+}
+
+.md > * { animation: rise 0.4s var(--ease) both; }
+
+.md p + p, .md p + ul, .md ul + p, .md p + ol, .md ol + p,
+.md table + p, .md p + table, .md pre + p, .md p + pre { margin-top: 12px; }
+
+.md h1, .md h2, .md h3, .md h4 {
+  font-family: var(--disp);
+  font-weight: 700;
+  color: var(--black);
+  letter-spacing: -0.01em;
+  margin: 18px 0 8px;
+  line-height: 1.3;
+}
+.md > h1:first-child, .md > h2:first-child, .md > h3:first-child { margin-top: 0; }
+.md h1 { font-size: 19px; }
+.md h2 { font-size: 17px; }
+.md h3 { font-size: 15.5px; }
+.md h4 { font-size: 14.5px; }
+
+.md strong { font-weight: 700; color: var(--black); }
+
+.md ul, .md ol { padding-left: 2px; list-style: none; }
+.md li { position: relative; padding-left: 20px; margin: 6px 0; }
+
+.md ul li::before {
+  content: "";
+  position: absolute;
+  left: 4px; top: 0.72em;
+  width: 6px; height: 6px;
+  border-radius: 2px;
+  background: var(--red);
+}
+
+.md ol { counter-reset: oli; }
+.md ol li { counter-increment: oli; padding-left: 27px; }
+.md ol li::before {
+  content: counter(oli);
+  position: absolute;
+  left: 0; top: 0.28em;
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  color: var(--red-deep);
+  font-size: 10.5px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.md code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  background: #f6f1f0;
+  border-radius: 5px;
+  padding: 2px 6px;
+  color: var(--black);
+}
+
+.md pre {
+  background: var(--black);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.md pre code { background: none; padding: 0; color: #f3ecea; font-size: 12.5px; line-height: 1.65; }
+
+.md table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13.5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.md th {
+  font-family: var(--disp);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--red-deep);
+  background: var(--red-tint);
+  padding: 9px 14px;
+}
+.md td { padding: 10px 14px; border-top: 1px solid var(--line); }
+.md tr:hover td { background: #fdf8f8; }
+
+/* thinking */
+.thinking-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 5px 16px 16px 16px;
+  padding: 13px 18px;
+}
+
+.thinking-row .dots { display: inline-flex; gap: 4px; }
+.thinking-row .dots i {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: hop 1.2s ease infinite;
+}
+.thinking-row .dots i:nth-child(2) { animation-delay: 0.15s; }
+.thinking-row .dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes hop {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ═════════ composer ═════════ */
+.dock {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  margin-inline: auto;
+  width: min(860px, 100vw - 48px);
+  z-index: 30;
+  padding-bottom: 20px;
+  background: linear-gradient(transparent, var(--paper) 40%);
+  animation: rise 0.65s var(--ease) 0.12s both;
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 17px;
+  padding: 9px 9px 9px 19px;
+  box-shadow: 0 4px 20px rgba(23, 18, 15, 0.07);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.composer:focus-within {
+  border-color: var(--red);
+  box-shadow: 0 4px 26px rgba(224, 82, 82, 0.16);
+}
+
+#input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--black);
+  line-height: 1.55;
+  max-height: 140px;
+  padding: 9px 0;
+  caret-color: var(--red);
+}
+#input::placeholder { color: var(--faint); }
+
+#send {
+  width: 40px; height: 40px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 12px;
+  background: var(--red);
+  color: var(--white);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(224, 82, 82, 0.4);
+  transition: transform 0.25s var(--ease), background 0.25s, opacity 0.25s, box-shadow 0.25s;
+}
+#send:hover { background: var(--red-deep); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(224, 82, 82, 0.45); }
+#send:active { transform: scale(0.92); }
+#send:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+#send svg { width: 18px; height: 18px; fill: currentColor; }
+
+.hint {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--faint);
+  margin-top: 10px;
+}
+.hint b { font-weight: 600; color: var(--muted); }
+
+/* ═════════ a11y / responsive ═════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .suggest { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .top { padding: 0 16px; }
+  .brand-co, .country-label, .status { display: none; }
+  .stage { padding: 86px 16px 160px; }
+  .suggest { grid-template-columns: 1fr; }
+  .stats { flex-wrap: wrap; }
+  .turn.you { max-width: 90%; }
+  .hint { display: none; }
+  .dock { width: calc(100vw - 24px); padding-bottom: 12px; }
+}
+</style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<aside class="sidebar">
+<!-- header -->
+<header class="top">
   <div class="brand">
-    <div class="brand-icon">🤖</div>
-    <div class="brand-text">
-      <h1>HRBot</h1>
-      <p>XYZ Company Copilot</p>
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Argus.ai</div>
+    <div class="brand-co">XYZ Company</div>
+  </div>
+  <div class="top-right">
+    <span class="country-label">Policy region</span>
+    <div class="seg" id="seg">
+      <button data-country="India">🇮🇳 India</button>
+      <button data-country="China">🇨🇳 China</button>
     </div>
+    <div class="status" id="status"><span class="led"></span><span id="status-txt">Online</span></div>
+    <button class="clear" id="clear-btn">Clear chat</button>
   </div>
+</header>
 
-  <div class="divider"></div>
-
-  <div>
-    <p class="section-label">What I can help with</p>
-    <div class="capabilities">
-      <button class="cap-item" onclick="sendQuick('What leave types are available?')">
-        <span class="cap-icon">🌴</span> Leave Balances & Policies
-      </button>
-      <button class="cap-item" onclick="sendQuick('What benefits do employees in India get?')">
-        <span class="cap-icon">🏥</span> Employee Benefits
-      </button>
-      <button class="cap-item" onclick="sendQuick('Show me company holidays for India in 2025')">
-        <span class="cap-icon">📅</span> Company Holidays
-      </button>
-      <button class="cap-item" onclick="sendQuick('How do I contact HR in India?')">
-        <span class="cap-icon">📞</span> HR Contacts & Escalation
-      </button>
-      <button class="cap-item" onclick="sendQuick('Show HR metrics for all months in 2026')">
-        <span class="cap-icon">📊</span> HR Metrics & Analytics
-      </button>
-    </div>
+<!-- stage -->
+<main class="stage" id="stage">
+  <div class="wrap">
+    <div class="welcome" id="welcome"></div>
+    <div class="thread" id="thread"></div>
   </div>
+</main>
 
-  <div class="divider"></div>
-
-  <div>
-    <p class="section-label">Try asking</p>
-    <div class="quick-chips">
-      <button class="chip" onclick="sendQuick('What is my leave balance for employee 1001?')">📋 Check leave balance for emp 1001</button>
-      <button class="chip" onclick="sendQuick('What is the sick leave policy in India?')">🤒 Sick leave policy in India</button>
-      <button class="chip" onclick="sendQuick('What is the meal allowance for business travel in China?')">✈️ China travel meal allowance</button>
-      <button class="chip" onclick="sendQuick('Show HR attrition metrics for May 2026')">📈 May 2026 attrition stats</button>
-    </div>
-  </div>
-
-  <div class="sidebar-footer">
-    Supports employees in India 🇮🇳 and China 🇨🇳<br/>
-    For urgent issues contact your country HR directly.
-  </div>
-</aside>
-
-<!-- Chat -->
-<div class="chat-wrapper">
-  <div class="chat-header">
-    <div class="chat-header-left">
-      <div class="status-dot"></div>
-      <div>
-        <h2>HRBot</h2>
-        <p>Employee Self-Service Copilot</p>
+<!-- welcome template -->
+<template id="welcome-tpl">
+  <div class="hero-grid">
+    <div class="hero-left">
+      <span class="eyebrow">Employee Self-Service</span>
+      <h1 class="hello"><span data-greet>Hello</span>.<br/>What can <em>HR</em> do<br/>for you today?</h1>
+      <p class="intro">I'm Argus.ai — your HR assistant for XYZ Company. Ask me about leave, benefits, holidays, HR contacts and people metrics. Answers follow the official policy for your selected region.</p>
+      <div class="stats">
+        <div class="stat"><b>2</b><span>Countries covered</span></div>
+        <div class="stat"><b>3</b><span>Live data tools</span></div>
+        <div class="stat"><b>24/7</b><span>Always available</span></div>
       </div>
     </div>
-    <button class="clear-btn" onclick="clearChat()">Clear chat</button>
-  </div>
-
-  <div class="messages" id="messages">
-    <div class="welcome" id="welcome">
-      <div class="welcome-icon">🤖</div>
-      <h2>Hello! I'm HRBot</h2>
-      <p>Your HR Self-Service assistant for XYZ Company. Ask me about leave, benefits, holidays, or HR contacts for India and China.</p>
-      <div class="welcome-chips">
-        <button class="welcome-chip" onclick="sendQuick('What leave types are available for India?')">Leave types in India</button>
-        <button class="welcome-chip" onclick="sendQuick('What is my leave balance for employee 1003?')">Check leave balance</button>
-        <button class="welcome-chip" onclick="sendQuick('Show me all company holidays in China')">China holidays 2025</button>
-        <button class="welcome-chip" onclick="sendQuick('What benefits are available for China employees?')">China benefits</button>
-        <button class="welcome-chip" onclick="sendQuick('How do I escalate an HR issue in India?')">HR escalation steps</button>
-        <button class="welcome-chip" onclick="sendQuick('Show all HR metrics for 2026')">HR metrics 2026</button>
+    <aside class="country-panel">
+      <h2>Policy region</h2>
+      <p class="cp-sub">Pick where you're employed — answers will use that region's policies, currency and holidays.</p>
+      <div class="cp-options">
+        <button class="cp-opt" data-country="India">
+          <span class="cp-flag">🇮🇳</span>
+          <span><b>India</b><span>INR ₹ · india-hr@xyz.example</span></span>
+          <span class="cp-check">✓</span>
+        </button>
+        <button class="cp-opt" data-country="China">
+          <span class="cp-flag">🇨🇳</span>
+          <span><b>China</b><span>CNY ¥ · cn-hr@xyz.example</span></span>
+          <span class="cp-check">✓</span>
+        </button>
       </div>
-    </div>
+      <p class="cp-note">Currently answering with <b data-cp-note>India</b> policies. You can switch anytime from the top bar.</p>
+    </aside>
   </div>
+  <p class="sg-head">Popular questions</p>
+  <div class="suggest">
+    <button class="sg" data-prompt-tpl="What is my leave balance for employee {id}?">
+      <h3>Check a leave balance <span class="arr">→</span></h3>
+      <p>Casual, sick and earned leave for any employee ID.</p>
+    </button>
+    <button class="sg" data-prompt-tpl="What leave types are available in {c}?">
+      <h3>Leave types &amp; policy <span class="arr">→</span></h3>
+      <p data-sub-tpl="How leave works in {c}, and how to apply.">How leave works, and how to apply.</p>
+    </button>
+    <button class="sg" data-prompt-tpl="What benefits do employees in {c} get?">
+      <h3>Explore benefits <span class="arr">→</span></h3>
+      <p data-sub-tpl="Insurance, wellness and perks in {c}.">Insurance, wellness and perks.</p>
+    </button>
+    <button class="sg" data-prompt-tpl="Show me company holidays for {c} in 2025">
+      <h3>Company holidays <span class="arr">→</span></h3>
+      <p data-sub-tpl="The official {c} holiday calendar.">The official holiday calendar.</p>
+    </button>
+    <button class="sg" data-prompt-tpl="How do I contact HR in {c}, and how do I escalate an issue?">
+      <h3>Reach HR &amp; escalate <span class="arr">→</span></h3>
+      <p data-sub-tpl="{c} HR contacts and the escalation path.">HR contacts and the escalation path.</p>
+    </button>
+    <button class="sg" data-prompt-tpl="Show HR metrics for all months in 2026">
+      <h3>People metrics <span class="arr">→</span></h3>
+      <p>Headcount, attrition and hiring trends for 2026.</p>
+    </button>
+  </div>
+</template>
 
-  <div class="typing-indicator" id="typing">
-    <div class="avatar">🤖</div>
-    <div class="typing-bubble">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
+<!-- composer -->
+<div class="dock">
+  <div class="composer">
+    <textarea id="input" rows="1" maxlength="2000" placeholder="Ask about leave, benefits, holidays, HR contacts…"></textarea>
+    <button id="send" aria-label="Send message">
+      <svg viewBox="0 0 24 24"><path d="M12 3l7 7-1.4 1.4L13 6.8V21h-2V6.8l-4.6 4.6L5 10z"/></svg>
+    </button>
   </div>
-
-  <div class="input-area">
-    <div class="input-row">
-      <textarea id="user-input" rows="1" placeholder="Ask about leave, benefits, holidays, HR contacts…" maxlength="2000"></textarea>
-      <button class="send-btn" id="send-btn" onclick="sendMessage()">
-        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
-      </button>
-    </div>
-    <p class="input-hint">Press Enter to send · Shift+Enter for new line</p>
-  </div>
+  <p class="hint"><span><b>Enter</b> to send</span><span><b>Shift+Enter</b> new line</span><span><b>/</b> focus</span></p>
 </div>
 
 <script>
-  const messagesEl = document.getElementById('messages');
-  const inputEl    = document.getElementById('user-input');
-  const sendBtn    = document.getElementById('send-btn');
-  const typingEl   = document.getElementById('typing');
-  const welcomeEl  = document.getElementById('welcome');
+/* ───────── refs + state ───────── */
+const stage     = document.getElementById('stage');
+const threadEl  = document.getElementById('thread');
+const welcomeEl = document.getElementById('welcome');
+const inputEl   = document.getElementById('input');
+const sendBtn   = document.getElementById('send');
+const statusEl  = document.getElementById('status');
+const statusTxt = document.getElementById('status-txt');
+const segEl     = document.getElementById('seg');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let history = [];
-  let isLoading = false;
+let history = [];
+let busy = false;
+let country = localStorage.getItem('argus-country') || 'India';
 
-  // Auto-resize textarea
-  inputEl.addEventListener('input', () => {
-    inputEl.style.height = 'auto';
-    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+const SAMPLE_ID = { India: '1001', China: '2001' };
+
+/* ───────── country ───────── */
+function renderCountry() {
+  document.querySelectorAll('[data-country]').forEach((b) => {
+    b.classList.toggle('on', b.dataset.country === country);
   });
-
-  inputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  const note = document.querySelector('[data-cp-note]');
+  if (note) note.textContent = country;
+  // re-template suggestion card subtitles
+  document.querySelectorAll('[data-sub-tpl]').forEach((p) => {
+    p.textContent = p.dataset.subTpl.replaceAll('{c}', country);
   });
+}
 
-  function formatTime() {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function setCountry(c, announce) {
+  if (c === country) return;
+  country = c;
+  localStorage.setItem('argus-country', c);
+  renderCountry();
+  if (announce && threadEl.children.length) {
+    const chip = document.createElement('div');
+    chip.className = 'sys';
+    chip.textContent = (c === 'India' ? '🇮🇳' : '🇨🇳') + ' Policy region switched to ' + c;
+    threadEl.appendChild(chip);
+    scrollDown();
   }
+}
 
-  function appendMessage(role, text) {
-    if (welcomeEl) welcomeEl.remove();
+/* ───────── welcome ───────── */
+function showWelcome() {
+  welcomeEl.innerHTML = '';
+  welcomeEl.appendChild(document.getElementById('welcome-tpl').content.cloneNode(true));
+  welcomeEl.style.display = '';
+  const h = new Date().getHours();
+  welcomeEl.querySelector('[data-greet]').textContent =
+    h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  renderCountry();
+}
+showWelcome();
+renderCountry();
 
-    const wrap = document.createElement('div');
-    wrap.className = `message ${role}`;
+/* ───────── tiny markdown renderer ───────── */
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-    const avatar = document.createElement('div');
-    avatar.className = 'avatar';
-    avatar.textContent = role === 'bot' ? '🤖' : 'Me';
+function inline(s) {
+  return s
+    .replace(/`([^`]+)`/g, (_, c) => '<code>' + c + '</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>');
+}
 
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.textContent = text;
+function mdToHtml(raw) {
+  const lines = esc(raw.replace(/\r/g, '')).split('\n');
+  const out = [];
+  let i = 0;
 
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    meta.textContent = formatTime();
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) { i++; continue; }
 
-    const inner = document.createElement('div');
-    inner.appendChild(bubble);
-    inner.appendChild(meta);
-
-    wrap.appendChild(avatar);
-    wrap.appendChild(inner);
-
-    // Insert before typing indicator
-    messagesEl.insertBefore(wrap, typingEl);
-    scrollToBottom();
-  }
-
-  function scrollToBottom() {
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-
-  function setLoading(state) {
-    isLoading = state;
-    sendBtn.disabled = state;
-    typingEl.classList.toggle('visible', state);
-    if (state) {
-      messagesEl.appendChild(typingEl);
-      scrollToBottom();
+    if (/^```/.test(line)) {
+      const buf = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]);
+      i++;
+      out.push('<pre><code>' + buf.join('\n') + '</code></pre>');
+      continue;
     }
-  }
 
-  async function sendMessage() {
-    const text = inputEl.value.trim();
-    if (!text || isLoading) return;
-
-    inputEl.value = '';
-    inputEl.style.height = 'auto';
-
-    appendMessage('user', text);
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history }),
-      });
-
-      const data = await res.json();
-      const reply = data.response || 'Sorry, something went wrong.';
-
-      history.push({ role: 'user', content: text });
-      history.push({ role: 'assistant', content: reply });
-
-      setLoading(false);
-      appendMessage('bot', reply);
-    } catch {
-      setLoading(false);
-      appendMessage('bot', 'Sorry, I could not reach the server. Please try again.');
+    const h = line.match(/^(#{1,4})\s+(.*)/);
+    if (h) {
+      out.push(`<h${h[1].length}>` + inline(h[2]) + `</h${h[1].length}>`);
+      i++;
+      continue;
     }
-  }
 
-  function sendQuick(text) {
-    inputEl.value = text;
-    sendMessage();
-  }
+    if (line.includes('|') && i + 1 < lines.length && /^\s*\|?[\s\-:|]+\|?\s*$/.test(lines[i + 1]) && lines[i + 1].includes('-')) {
+      const cells = (l) => l.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map((c) => inline(c.trim()));
+      const head = cells(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].includes('|') && lines[i].trim()) rows.push(cells(lines[i++]));
+      out.push(
+        '<table><thead><tr>' + head.map((c) => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>' +
+        rows.map((r) => '<tr>' + r.map((c) => '<td>' + c + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table>'
+      );
+      continue;
+    }
 
-  function clearChat() {
-    history = [];
-    // Remove all message nodes, re-add welcome
-    Array.from(messagesEl.children).forEach(el => {
-      if (el !== typingEl) el.remove();
+    const ul = /^\s*[-*•]\s+/, ol = /^\s*\d+[.)]\s+/;
+    if (ul.test(line) || ol.test(line)) {
+      const ordered = ol.test(line);
+      const re = ordered ? ol : ul;
+      const items = [];
+      while (i < lines.length && re.test(lines[i])) items.push(inline(lines[i++].replace(re, '')));
+      const tag = ordered ? 'ol' : 'ul';
+      out.push(`<${tag}>` + items.map((it) => '<li>' + it + '</li>').join('') + `</${tag}>`);
+      continue;
+    }
+
+    const buf = [line];
+    i++;
+    while (
+      i < lines.length && lines[i].trim() &&
+      !/^(#{1,4}\s|```)/.test(lines[i]) && !ul.test(lines[i]) && !ol.test(lines[i]) &&
+      !(lines[i].includes('|') && i + 1 < lines.length && /-/.test(lines[i + 1]) && /^\s*\|?[\s\-:|]+\|?\s*$/.test(lines[i + 1]))
+    ) buf.push(lines[i++]);
+    out.push('<p>' + buf.map(inline).join('<br/>') + '</p>');
+  }
+  return out.join('');
+}
+
+/* ───────── thread rendering ───────── */
+function timeNow() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function hideWelcome() {
+  if (welcomeEl.style.display !== 'none') welcomeEl.style.display = 'none';
+}
+
+function addYou(text) {
+  hideWelcome();
+  const el = document.createElement('div');
+  el.className = 'turn you';
+  const pill = document.createElement('div');
+  pill.className = 'you-pill';
+  pill.textContent = text;
+  el.appendChild(pill);
+  threadEl.appendChild(el);
+  scrollDown();
+}
+
+function botHead(label) {
+  const head = document.createElement('div');
+  head.className = 'bot-head';
+  head.innerHTML = '<span class="bot-chip">A</span><span class="name">Argus.ai</span><span class="time">' + label + '</span>';
+  return head;
+}
+
+function addThinking() {
+  hideWelcome();
+  const el = document.createElement('div');
+  el.className = 'turn bot';
+  el.appendChild(botHead('thinking'));
+  const row = document.createElement('div');
+  row.className = 'thinking-row';
+  row.innerHTML = 'Looking that up <span class="dots"><i></i><i></i><i></i></span>';
+  el.appendChild(row);
+  threadEl.appendChild(el);
+  scrollDown();
+  return el;
+}
+
+function addBot(text) {
+  const el = document.createElement('div');
+  el.className = 'turn bot';
+  const head = botHead(timeNow());
+
+  const copy = document.createElement('button');
+  copy.className = 'copy-btn';
+  copy.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy';
+  copy.addEventListener('click', () => {
+    navigator.clipboard.writeText(text).then(() => {
+      copy.lastChild.textContent = '';
+      copy.append('Copied');
+      setTimeout(() => { copy.lastChild.textContent = 'Copy'; }, 1500);
     });
-    const welcome = document.createElement('div');
-    welcome.id = 'welcome';
-    welcome.className = 'welcome';
-    welcome.innerHTML = `
-      <div class="welcome-icon">🤖</div>
-      <h2>Hello! I'm HRBot</h2>
-      <p>Your HR Self-Service assistant for XYZ Company. Ask me about leave, benefits, holidays, or HR contacts for India and China.</p>
-      <div class="welcome-chips">
-        <button class="welcome-chip" onclick="sendQuick('What leave types are available for India?')">Leave types in India</button>
-        <button class="welcome-chip" onclick="sendQuick('What is my leave balance for employee 1003?')">Check leave balance</button>
-        <button class="welcome-chip" onclick="sendQuick('Show me all company holidays in China')">China holidays 2025</button>
-        <button class="welcome-chip" onclick="sendQuick('What benefits are available for China employees?')">China benefits</button>
-        <button class="welcome-chip" onclick="sendQuick('How do I escalate an HR issue in India?')">HR escalation steps</button>
-        <button class="welcome-chip" onclick="sendQuick('Show all HR metrics for 2026')">HR metrics 2026</button>
-      </div>`;
-    messagesEl.insertBefore(welcome, typingEl);
+  });
+  head.appendChild(copy);
+  el.appendChild(head);
+
+  const md = document.createElement('div');
+  md.className = 'md';
+  md.innerHTML = mdToHtml(text);
+  [...md.children].forEach((b, idx) => { b.style.animationDelay = Math.min(idx * 70, 500) + 'ms'; });
+  el.appendChild(md);
+  threadEl.appendChild(el);
+  scrollDown();
+}
+
+function scrollDown() {
+  requestAnimationFrame(() => stage.scrollTo({ top: stage.scrollHeight, behavior: reduceMotion ? 'auto' : 'smooth' }));
+}
+
+/* ───────── send flow ───────── */
+function setBusy(state) {
+  busy = state;
+  sendBtn.disabled = state;
+  statusEl.classList.toggle('busy', state);
+  statusTxt.textContent = state ? 'Thinking' : 'Online';
+}
+
+async function send(text) {
+  text = (text ?? inputEl.value).trim();
+  if (!text || busy) return;
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+
+  addYou(text);
+  setBusy(true);
+  const ghost = addThinking();
+
+  let reply;
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, history, country }),
+    });
+    const data = await res.json();
+    reply = data.response || 'Sorry, something went wrong.';
+    history.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
+  } catch {
+    reply = 'Sorry, I could not reach the server. Please try again.';
   }
+
+  ghost.remove();
+  setBusy(false);
+  addBot(reply);
+}
+
+/* ───────── wiring ───────── */
+sendBtn.addEventListener('click', () => send());
+
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + 'px';
+});
+
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== inputEl) {
+    e.preventDefault();
+    inputEl.focus();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const c = e.target.closest('[data-country]');
+  if (c) { setCountry(c.dataset.country, true); return; }
+  const t = e.target.closest('[data-prompt-tpl]');
+  if (t) {
+    send(t.dataset.promptTpl.replaceAll('{c}', country).replaceAll('{id}', SAMPLE_ID[country]));
+  }
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  history = [];
+  threadEl.innerHTML = '';
+  showWelcome();
+  stage.scrollTo({ top: 0 });
+});
 </script>
 </body>
 </html>

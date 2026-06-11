@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Employee Self-Service HR Copilot — powered by Claude + Pinecone RAG."""
+"""Employee Self-Service HR Copilot — powered by Groq + Pinecone RAG."""
 from __future__ import annotations
 
+import json
 import os
 
-import anthropic
-from anthropic import beta_tool
+from openai import OpenAI
 from pinecone import Pinecone
 
 from hr_data import EMPLOYEES, HR_METRICS, LEAVE_BALANCES
@@ -30,7 +30,7 @@ def _embed(text: str) -> list[float]:
 
 # ── System prompt ─────────────────────────────────────────────────────────────
 
-_SYSTEM_PROMPT = """You are HRBot, the Employee Self-Service AI Copilot for XYZ Company.
+_SYSTEM_PROMPT = """You are Argus.ai, the Employee Self-Service AI Copilot for XYZ Company.
 You support employees in India and China with accurate, policy-aligned HR answers in a warm, professional tone.
 
 ## Important Notice
@@ -57,14 +57,20 @@ For binding entitlements, employees should consult official HR documentation or 
 - Share salary slips or compensation data.
 - Handle disciplinary actions, terminations, or performance management."""
 
-CACHED_SYSTEM = [
-    {"type": "text", "text": _SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}},
-]
+SYSTEM_PROMPT = _SYSTEM_PROMPT
+
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+
+def make_client() -> OpenAI:
+    return OpenAI(
+        api_key=os.environ["GROQ_API_KEY"],
+        base_url="https://api.groq.com/openai/v1",
+    )
 
 
 # ── Tools ─────────────────────────────────────────────────────────────────────
 
-@beta_tool
 def search_hr_knowledge(query: str, country: str = "India") -> str:
     """Search the HR knowledge base (policies, benefits, holidays, contacts) using semantic search.
 
@@ -99,7 +105,6 @@ def search_hr_knowledge(query: str, country: str = "India") -> str:
     return "\n\n---\n\n".join(chunks)
 
 
-@beta_tool
 def get_leave_balance(employee_id: str) -> str:
     """Retrieve the current leave balance for a specific employee.
 
@@ -130,7 +135,6 @@ def get_leave_balance(employee_id: str) -> str:
     return "\n".join(lines)
 
 
-@beta_tool
 def get_hr_metrics(month: str = "all") -> str:
     """Retrieve monthly HR recruitment and attrition metrics.
 
@@ -165,68 +169,156 @@ def get_hr_metrics(month: str = "all") -> str:
     return f"No data found for '{month}'. Available months: {available}"
 
 
-TOOLS = [search_hr_knowledge, get_leave_balance, get_hr_metrics]
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_hr_knowledge",
+            "description": "Search the HR knowledge base (policies, benefits, holidays, contacts) using semantic search.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Natural-language question about HR policy, benefits, holidays, or contacts.",
+                    },
+                    "country": {
+                        "type": "string",
+                        "enum": ["India", "China"],
+                        "description": "Employee's country (default 'India').",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_leave_balance",
+            "description": "Retrieve the current leave balance for a specific employee.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "employee_id": {
+                        "type": "string",
+                        "description": "The employee's unique ID (e.g. 1001 for India, 2001 for China).",
+                    },
+                },
+                "required": ["employee_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_hr_metrics",
+            "description": "Retrieve monthly HR recruitment and attrition metrics.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "month": {
+                        "type": "string",
+                        "description": "A specific month like 'Jan-2026' or 'all' for the full summary.",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+]
+
+_TOOL_MAP = {
+    "search_hr_knowledge": search_hr_knowledge,
+    "get_leave_balance": get_leave_balance,
+    "get_hr_metrics": get_hr_metrics,
+}
+
+
+def run_turn(
+    client: OpenAI,
+    messages: list[dict],
+    country: str | None = None,
+    max_rounds: int = 8,
+) -> str:
+    """Run one user turn through the tool-calling loop and return the reply text."""
+    system = SYSTEM_PROMPT
+    if country:
+        system += (
+            f"\n\n## Session Context\nThe employee you are assisting is based in {country}. "
+            f"Default to {country} policies, currency, holidays and HR contacts "
+            "unless they explicitly ask about another country."
+        )
+    convo = [{"role": "system", "content": system}] + messages
+    reply = ""
+    for _ in range(max_rounds):
+        resp = client.chat.completions.create(
+            model=GROQ_MODEL,
+            max_tokens=2048,
+            messages=convo,
+            tools=TOOLS,
+        )
+        msg = resp.choices[0].message
+        reply = msg.content or ""
+        if not msg.tool_calls:
+            break
+        convo.append(
+            {
+                "role": "assistant",
+                "content": msg.content or "",
+                "tool_calls": [tc.model_dump() for tc in msg.tool_calls],
+            }
+        )
+        for tc in msg.tool_calls:
+            try:
+                args = json.loads(tc.function.arguments or "{}")
+                result = _TOOL_MAP[tc.function.name](**args)
+            except Exception as exc:  # surface tool failures to the model
+                result = f"Tool error: {exc}"
+            convo.append({"role": "tool", "tool_call_id": tc.id, "content": result})
+    return reply
 
 
 # ── CLI agent loop ────────────────────────────────────────────────────────────
 
 def run_agent() -> None:
-    client = anthropic.Anthropic()
+    client = make_client()
     messages: list[dict] = []
 
     print("\n" + "═" * 64)
-    print("  HRBot — Employee Self-Service Copilot  |  XYZ Company")
+    print("  Argus.ai — Employee Self-Service Copilot  |  XYZ Company")
     print("  Supports: India & China  |  Type 'exit' to end session.")
     print("═" * 64 + "\n")
-    print("HRBot: Hello! I'm HRBot, your HR Self-Service assistant.")
+    print("Argus.ai: Hello! I'm Argus.ai, your HR Self-Service assistant.")
     print("       Ask me about leave, benefits, holidays, or HR contacts.\n")
 
     while True:
         try:
             user_input = input("You: ").strip()
         except (EOFError, KeyboardInterrupt):
-            print("\nHRBot: Goodbye! Have a great day.")
+            print("\nArgus.ai: Goodbye! Have a great day.")
             break
 
         if not user_input:
             continue
         if user_input.lower() in ("exit", "quit", "bye", "goodbye"):
-            print("\nHRBot: Goodbye! Stay well and feel free to return anytime.")
+            print("\nArgus.ai: Goodbye! Stay well and feel free to return anytime.")
             break
 
         messages.append({"role": "user", "content": user_input})
 
-        runner = client.beta.messages.tool_runner(
-            model="claude-opus-4-6",
-            max_tokens=2048,
-            system=CACHED_SYSTEM,
-            tools=TOOLS,
-            messages=messages,
-        )
-
-        last_msg = None
         try:
-            for msg in runner:
-                last_msg = msg
-        except anthropic.APIError as exc:
-            print(f"\nHRBot: Sorry, I ran into an API error ({exc}). Please try again.\n")
+            response_text = run_turn(client, messages)
+        except Exception as exc:
+            print(f"\nArgus.ai: Sorry, I ran into an API error ({exc}). Please try again.\n")
             messages.pop()
             continue
-
-        if last_msg is None:
-            print("\nHRBot: I'm sorry, I couldn't generate a response. Please try rephrasing.\n")
-            messages.pop()
-            continue
-
-        response_text = "".join(
-            block.text for block in last_msg.content if block.type == "text"
-        )
 
         if response_text:
             messages.append({"role": "assistant", "content": response_text})
-            print(f"\nHRBot: {response_text}\n")
+            print(f"\nArgus.ai: {response_text}\n")
         else:
-            print("\nHRBot: I'm sorry, I couldn't generate a response. Please try rephrasing.\n")
+            print("\nArgus.ai: I'm sorry, I couldn't generate a response. Please try rephrasing.\n")
             messages.pop()
 
 

@@ -1,11 +1,9 @@
-"""HRBot Web API — FastAPI backend for the HR Copilot."""
+"""Argus.ai Web API — FastAPI backend for the HR Copilot."""
 from __future__ import annotations
 
 import asyncio
-import os
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,9 +12,9 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-from agent import CACHED_SYSTEM, TOOLS  # noqa: E402 (must load .env first)
+from agent import make_client, run_turn  # noqa: E402 (must load .env first)
 
-app = FastAPI(title="HRBot API")
+app = FastAPI(title="Argus.ai API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = anthropic.Anthropic()
+client = make_client()
 
 
 class Message(BaseModel):
@@ -36,6 +34,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[Message] = []
+    country: str = "India"
 
 
 @app.post("/api/chat")
@@ -43,30 +42,13 @@ async def chat(req: ChatRequest):
     messages = [{"role": m.role, "content": m.content} for m in req.history]
     messages.append({"role": "user", "content": req.message})
 
-    def run_agent():
-        runner = client.beta.messages.tool_runner(
-            model="claude-opus-4-6",
-            max_tokens=2048,
-            system=CACHED_SYSTEM,
-            tools=TOOLS,
-            messages=messages,
-        )
-        last_msg = None
-        for msg in runner:
-            last_msg = msg
-        return last_msg
-
     try:
-        last_msg = await asyncio.get_event_loop().run_in_executor(None, run_agent)
-    except anthropic.APIError as exc:
+        response_text = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: run_turn(client, messages, country=req.country)
+        )
+    except Exception as exc:
         return {"response": f"Sorry, I ran into an error: {exc}. Please try again."}
 
-    if last_msg is None:
-        return {"response": "Sorry, I couldn't generate a response. Please try rephrasing."}
-
-    response_text = "".join(
-        block.text for block in last_msg.content if block.type == "text"
-    )
     return {"response": response_text or "Sorry, I couldn't generate a response."}
 
 
