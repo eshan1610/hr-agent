@@ -1,26 +1,24 @@
 """One-time ingestion script — converts HR knowledge base into Pinecone vectors.
 
 Run once (or after any policy/benefits/holidays/contacts update):
-    python ingest.py
+    python3 ingest.py
 
 Requires:
     PINECONE_API_KEY  — from https://app.pinecone.io
-    OPENAI_API_KEY    — for text-embedding-3-small embeddings
 """
 from __future__ import annotations
 
 import os
 import time
 
-from openai import OpenAI
 from pinecone import Pinecone, ServerlessSpec
 
 from hr_data import BENEFITS, HOLIDAYS, HR_CONTACTS, LEAVE_POLICY
 
-INDEX_NAME = "hrbot-knowledge"
-EMBED_MODEL = "text-embedding-3-small"
-EMBED_DIM = 1536
-BATCH_SIZE = 50
+INDEX_NAME   = "hrbot-knowledge"
+EMBED_MODEL  = "multilingual-e5-large"
+EMBED_DIM    = 1024
+BATCH_SIZE   = 50
 
 
 # ── Document generation ───────────────────────────────────────────────────────
@@ -107,7 +105,6 @@ def get_or_create_index(pc: Pinecone) -> None:
             metric="cosine",
             spec=ServerlessSpec(cloud="aws", region="us-east-1"),
         )
-        # Wait until ready
         while not pc.describe_index(INDEX_NAME).status["ready"]:
             time.sleep(1)
         print("Index ready.")
@@ -115,21 +112,26 @@ def get_or_create_index(pc: Pinecone) -> None:
         print(f"Index '{INDEX_NAME}' already exists.")
 
 
-# ── Embedding + upsert ────────────────────────────────────────────────────────
+# ── Embed + upsert ────────────────────────────────────────────────────────────
 
-def embed_texts(oai: OpenAI, texts: list[str]) -> list[list[float]]:
-    response = oai.embeddings.create(model=EMBED_MODEL, input=texts)
-    return [item.embedding for item in response.data]
-
-
-def upsert_documents(pc: Pinecone, oai: OpenAI, docs: list[dict]) -> None:
+def upsert_documents(pc: Pinecone, docs: list[dict]) -> None:
     index = pc.Index(INDEX_NAME)
     for i in range(0, len(docs), BATCH_SIZE):
         batch = docs[i : i + BATCH_SIZE]
         texts = [d["text"] for d in batch]
-        embeddings = embed_texts(oai, texts)
+
+        embeddings = pc.inference.embed(
+            model=EMBED_MODEL,
+            inputs=texts,
+            parameters={"input_type": "passage", "truncate": "END"},
+        )
+
         vectors = [
-            {"id": d["id"], "values": emb, "metadata": {**d["metadata"], "text": d["text"]}}
+            {
+                "id": d["id"],
+                "values": emb["values"],
+                "metadata": {**d["metadata"], "text": d["text"]},
+            }
             for d, emb in zip(batch, embeddings)
         ]
         index.upsert(vectors=vectors)
@@ -140,18 +142,15 @@ def upsert_documents(pc: Pinecone, oai: OpenAI, docs: list[dict]) -> None:
 
 def main() -> None:
     pinecone_key = os.environ.get("PINECONE_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if not pinecone_key or not openai_key:
-        raise SystemExit("Set PINECONE_API_KEY and OPENAI_API_KEY environment variables.")
+    if not pinecone_key:
+        raise SystemExit("Set PINECONE_API_KEY environment variable.")
 
     pc = Pinecone(api_key=pinecone_key)
-    oai = OpenAI(api_key=openai_key)
-
     docs = build_documents()
     print(f"Built {len(docs)} documents.")
 
     get_or_create_index(pc)
-    upsert_documents(pc, oai, docs)
+    upsert_documents(pc, docs)
     print("Ingestion complete.")
 
 

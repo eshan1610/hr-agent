@@ -6,23 +6,26 @@ import os
 
 import anthropic
 from anthropic import beta_tool
-from openai import OpenAI
 from pinecone import Pinecone
 
 from hr_data import EMPLOYEES, HR_METRICS, LEAVE_BALANCES
 
 # ── Clients ───────────────────────────────────────────────────────────────────
 
-_pc  = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-_oai = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+_pc    = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
 _index = _pc.Index("hrbot-knowledge")
 
-EMBED_MODEL = "text-embedding-3-small"
+EMBED_MODEL = "multilingual-e5-large"
 TOP_K = 4
 
 
 def _embed(text: str) -> list[float]:
-    return _oai.embeddings.create(model=EMBED_MODEL, input=[text]).data[0].embedding
+    result = _pc.inference.embed(
+        model=EMBED_MODEL,
+        inputs=[text],
+        parameters={"input_type": "query", "truncate": "END"},
+    )
+    return result[0]["values"]
 
 
 # ── System prompt ─────────────────────────────────────────────────────────────
